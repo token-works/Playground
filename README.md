@@ -29,6 +29,69 @@ The creator is excluded from its own project's member share. If no other active 
 
 An authorized token conversion pays its caller **0.5% of newly produced ETH**, then applies the table to the remainder. Pre-existing ETH and permissionless `depositETH()` forwarding earn no caller reward. Creator/member and Tokenworks shares use claim accounting; holder funds are forwarded immediately to their splitter.
 
+## Prompting projects to return revenue to Playground
+
+Name the **project receiver clone** as the destination for project revenue. The Playground hub, factory and project implementation are different contracts. Plain ETH sent to the hub reverts; ETH sent to the receiver waits there until forwarded into the hub's accounting.
+
+### Prepare the receiver and request
+
+If your prompt needs an explicit receiver address, an active member should first call `playground.createProject()`. Read `ProjectCreated` or `projects(projectId)` to obtain the receiver, and verify its `playground()` and `projectId()` getters. Then the same creator, still an active member, approves the **hub** for the Intake payment and submits through the existing-project overload:
+
+```solidity
+playground.requestProject(projectId, action, body, paymentAsset, amount);
+```
+
+This preserves the receiver as the Intake payer. The four-argument overload creates a new receiver for each successful request and passes the body unchanged: it does **not** substitute receiver-address placeholders. For that flow, the prompt must tell the worker to resolve and validate the actual Intake payer before configuring revenue destinations. Merely mentioning Playground in a prompt submitted directly from a wallet does not make its receiver the payer.
+
+Keep administrative ownership separate from revenue collection. For supported IMD launch kinds (`evm_project`, `evm_contracts`, `univ4_hook`), explicitly set the request body's `owner` to your admin wallet or multisig. Where token economics apply, set `economics.remainderTo` to the receiver if the remaining launch tokens should enter this revenue flow. That field controls token allocation, not ongoing application fees. Requester trading fees follow the service's payer rules; verify the current [IMD request fields and payer rules](https://imd.fun/docs/#intake-examples) rather than assuming the prose changes them. The receiver has no arbitrary execution function for administration or external fee claims.
+
+### Copy-pastable prompt block
+
+Append this to your project description and replace every placeholder before submission:
+
+```text
+Playground revenue integration:
+- Chain ID: <CHAIN_ID>
+- Playground hub: <PLAYGROUND_ADDRESS>
+- Existing project ID: <PROJECT_ID>
+- Project revenue receiver clone: <RECEIVER_ADDRESS>
+- Contract administrator: <ADMIN_WALLET_OR_MULTISIG>
+- Revenue model: <EXACT_FEES_OR_INCOME_SOURCES,_RATES,ASSETS_AND_WHEN_PAYABLE>
+
+Verify that the hub registers this receiver for this project and that the
+receiver's playground() and projectId() getters match. Route all project-owned
+revenue described above to this receiver, including each applicable fee,
+royalty, treasury or withdrawal-recipient setting. Keep user deposits, escrow,
+refunds and other funds owed to users separate from project revenue.
+
+Use the admin address for administrative roles. Do not infer fee recipients
+from the deployer, owner, msg.sender or tx.origin. Keep this project's receiver
+as the requester when submitting through Playground's Intake flow.
+
+Prefer native ETH revenue. Pay the receiver with a payable call and sufficient
+gas, checking success. Receiving ETH alone does not distribute it: provide an
+operational path for anyone to subsequently call receiver.depositETH() with
+ZERO msg.value. The receiver forwards its ETH balance to the correct project.
+Do not duplicate the revenue split; Playground applies its existing accounting.
+
+If revenue is held upstream, provide permissionless release to the fixed
+receiver. Do not require the receiver to make an arbitrary claim or admin call.
+
+For ERC20 revenue, identify every expected token and supply a compatible
+IPlaygroundSwapAdapter route to native ETH. Document the Playground-owner
+configuration and the active member or approved operator that will call
+swapToETH with appropriate minimum output and deadline. Verify token transfer
+rules permit the route. Token conversion is not automatic; the receiver's
+existing 0.5% caller incentive applies to newly produced ETH.
+
+Verify an actual revenue-producing action, payout to this receiver, forwarding
+or token conversion, and the resulting creator/member credits and splitter
+payments. Show the configured receiver and any unfinished setup steps in the
+deployment report. Document who, if anyone, can change the revenue destination.
+```
+
+ETH forwarding is permissionless but still needs a transaction; name the UI action or keeper that will trigger it. ERC20 conversion additionally needs an owner-configured adapter and an authorized caller. This repository supplies the adapter interface, not a production DEX adapter. Without that setup, received tokens remain in the project receiver. See the [conversion reference](docs/REFERENCE.md#erc20-conversion) for its exact balance checks and permissions.
+
 ## Membership and controls
 
 - Owners invite wallets; each invited wallet must call `acceptInvitation()` before it becomes a member. Invitations alone earn no share and grant no member permissions. The founder starts active automatically.
