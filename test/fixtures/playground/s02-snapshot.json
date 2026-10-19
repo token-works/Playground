@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "sourceChainId": 1,
+  "collection": "0xb33d806a94b6770c9d309e0842a75f8e6edcd5a6",
+  "blockNumber": 100,
+  "blockHash": "0x000000000000000000000000000000000000000000000000000000000000007b",
+  "supply": 3,
+  "maxTokenId": 4,
+  "holders": [
+    "0x0000000000000000000000000000000000000100",
+    "0x0000000000000000000000000000000000000200"
+  ],
+  "counts": [
+    2,
+    1
+  ],
+  "allocationHash": "0x42e917faa6883746d2a17c8391a86cbdf46f7b7c86b8ffc33f67811ba2c5e14b"
+}

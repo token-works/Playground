@@ -1,0 +1,24 @@
+# Build and execution artifacts
+out/
+cache/
+broadcast/
+coverage/
+lcov.info
+__pycache__/
+*.py[cod]
+
+# Keep the public deployment snapshot; other operational outputs stay local.
+output/*
+!output/playground/
+output/playground/*
+!output/playground/s02-snapshot.json
+
+# Credentials and local editor configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.DS_Store
+.idea/
+.vscode/
